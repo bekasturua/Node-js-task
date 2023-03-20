@@ -1,6 +1,6 @@
 
 import express, { Request, Response } from 'express';
-import { forgotPassword, login, register, resetPassword } from '../services/auth.service.';
+import { forgotPassword, login, register, resetPassword } from '../services/auth.service';
 import { body, validationResult } from 'express-validator';
 
 
