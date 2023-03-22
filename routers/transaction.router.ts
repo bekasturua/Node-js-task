@@ -11,7 +11,7 @@ const transactionRouter = express.Router();
 
 
 transactionRouter.post("/transactions", [
-    body('categories').isArray().notEmpty(),
+    body('categories').optional().isArray(),
     body('categories.*').isString().notEmpty(),
     body('type').isString().isIn(['income', 'expense']).notEmpty(),
     body('amount').isNumeric().notEmpty(),

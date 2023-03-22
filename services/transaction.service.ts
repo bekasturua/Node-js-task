@@ -1,12 +1,12 @@
 import { getDb } from "../database";
 import { User } from "../types/user.type";
 
-export const createTransaction = async (categories: string[], type: string, amount: number, description: string, user: User, status?: string) => {
+export const createTransaction = async (categories: string[] = [], type: string, amount: number, description: string, user: User, status?: string) => {
 
     const db = getDb();
 
     try {
-        const fetchedCategories = await db.collection("categories").find({
+        let fetchedCategories = await db.collection("categories").find({
 
             name: { $in: categories },
             user_id: user._id
@@ -23,6 +23,15 @@ export const createTransaction = async (categories: string[], type: string, amou
         if (!status && type === 'expense') {
             throw new Error("Expense should have a status.");
         }
+
+        if (fetchedCategories.length === 0) {
+            fetchedCategories = await db.collection("categories").find({
+                name: { $in: ["default"] },
+                user_id: user._id
+            }).toArray();
+        }
+
+
 
         const transaction = await db.collection("transactions").insertOne({ amount, type, description, status, user_id: user._id, category_ids: fetchedCategories.map(fetchCategory => fetchCategory._id) });
 
