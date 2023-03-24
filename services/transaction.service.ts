@@ -1,5 +1,7 @@
 import { getDb } from '../database';
+import { Category } from '../types/category.types';
 import { Search } from '../types/search.type';
+import { Transaction } from '../types/transaction.types';
 import { User } from '../types/user.type';
 
 export const createTransaction = async (
@@ -15,7 +17,7 @@ export const createTransaction = async (
   try {
     let fetchedCategories = await db
       .collection('categories')
-      .find({
+      .find<Category>({
         name: { $in: categories },
         user_id: user._id,
       })
@@ -36,25 +38,21 @@ export const createTransaction = async (
     if (fetchedCategories.length === 0) {
       fetchedCategories = await db
         .collection('categories')
-        .find({
+        .find<Category>({
           name: { $in: ['default'] },
         })
         .toArray();
     }
 
-    const transaction = await db
-      .collection('transactions')
-      .insertOne({
-        amount,
-        type,
-        description,
-        status,
-        user_id: user._id,
-        category_ids: fetchedCategories.map(
-          (fetchCategory) => fetchCategory._id,
-        ),
-        created_at: new Date(),
-      });
+    const transaction = await db.collection('transactions').insertOne({
+      amount,
+      type,
+      description,
+      status,
+      user_id: user._id,
+      category_ids: fetchedCategories.map((fetchCategory) => fetchCategory._id),
+      created_at: new Date(),
+    });
 
     return transaction;
   } catch (error) {
@@ -107,7 +105,7 @@ export const getTransactions = async (
 
     return await db
       .collection('transactions')
-      .find(search)
+      .find<Transaction>(search)
       .sort(sort)
       .toArray();
   } catch (error) {}

@@ -1,5 +1,7 @@
 import { ObjectId } from 'mongodb';
 import { getDb } from '../database';
+import { Category } from '../types/category.types';
+import { Transaction } from '../types/transaction.types';
 import { User } from '../types/user.type';
 
 export const createCategory = async (name: string, user: User) => {
@@ -46,17 +48,21 @@ export const deleteCategory = async (name: string, user: User) => {
   try {
     const category = await db
       .collection('categories')
-      .findOne({ name, user_id: user._id });
+      .findOne<Category | null>({ name, user_id: user._id });
     const defaultCategory = await db
       .collection('categories')
-      .findOne({ name: 'default' });
+      .findOne<Category>({ name: 'default' });
+
+    if (defaultCategory === null) {
+      throw new Error('Default category not found');
+    }
 
     if (category === null) {
       throw new Error('Category not found');
     }
     const transactions = await db
       .collection('transactions')
-      .find({
+      .find<Transaction>({
         category_ids: { $elemMatch: { $eq: category._id } },
       })
       .toArray();
@@ -72,10 +78,10 @@ export const deleteCategory = async (name: string, user: User) => {
       transaction.category_ids.splice(categoryToDeleteIndex, 1);
 
       const defaultCategoryIndex = categoryIds.indexOf(
-        defaultCategory?._id.toString(),
+        defaultCategory._id.toString(),
       );
       if (defaultCategoryIndex === -1) {
-        transaction.category_ids.push(defaultCategory?._id);
+        transaction.category_ids.push(defaultCategory._id);
       }
       await db
         .collection('transactions')
